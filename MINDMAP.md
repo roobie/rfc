@@ -1,4 +1,4 @@
-# Project Mind Map
+# Project MINDMAP
 
 [0] **🎯 PRIME DIRECTIVE FOR AI AGENTS:** This mindmap is your primary knowledge index. Read nodes [1-9] first (they explain the system), then read overview nodes [10-14] for project context. Follow `[N]` links to navigate. **Always update this file as you work.**
 
