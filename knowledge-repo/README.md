@@ -216,22 +216,7 @@ See **[DRAFT.md](./DRAFT.md)** for:
 
 ---
 
-## Real-World Example Repos
-
-**Python Knowledge Base**
-- Python Q&A: ImportError, asyncio, type hints, pytest
-- Audience: Python developers
-- Size: 100+ entries
-
-**DevOps Runbooks**
-- Kubernetes debugging, Docker troubleshooting, SSL cert renewal, database backups
-- Audience: SRE/DevOps teams
-- Size: 50+ entries (and growing)
-
-**Web Development Patterns**
-- REST versioning, authentication strategies, CORS, rate limiting, caching
-- Audience: Backend/frontend engineers
-- Size: 30+ entries
+## TBD: Real-World Example Repos
 
 ---
 
