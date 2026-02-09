@@ -17,24 +17,30 @@
 
 ```text
 knowledge/
+├── README.md                # Repo overview and quick start
+├── CONTRIBUTING.md          # Contribution guidelines
 ├── entries/
-│   ├── 0001-python-importerror-fix.md
-│   ├── 0002-rust-ownership-basics.md
-│   └── 0003-docker-multistage-builds.md
+│   ├── fv/
+│   │   ├── fvb2iq.md        # Entry with ID fvb2iq (sharded by fv)
+│   │   └── fvm7pl.md        # Entry with ID fvm7pl (sharded by fv)
+│   ├── k3/
+│   │   ├── k3mnwx.md        # Entry with ID k3mnwx (sharded by k3)
+│   │   └── k3op9q.md        # Entry with ID k3op9q (sharded by k3)
+│   ├── zz/
+│   └── ...                  # Directories for each 2-char prefix
 ├── .knowledge/
 │   ├── index.json           # Auto-generated, git-ignored
 │   └── config.yaml          # Repo-level settings
-├── meta/
-│   ├── README.md            # Human-readable repo overview
-│   └── CONTRIBUTING.md      # Contribution guidelines
 └── .git/
 ```
 
 **Key decisions:**
 
-- **`entries/`**: Single flat directory, entries named `{id}-{slug}.md`
+- **`README.md` at root**: Quick start and repo overview (human-facing)
+- **`entries/{prefix}/`**: Sharded by first two characters of ID (base36), e.g., `fv/`, `k3/`, `zz/`
+- **Entry naming**: `{id}.md` where `id` is base36-encoded (e.g., `fvb2iq.md`)
 - **`.knowledge/`**: Tool-generated files (indexes, caches) — git-ignored by default
-- **`meta/`**: Human-facing documentation about the repo itself
+- **Lowercase by design**: Base36 uses only lowercase letters, no case-sensitivity issues
 
 ---
 
@@ -44,7 +50,7 @@ knowledge/
 
 ```yaml
 ---
-id: "0001"
+id: "fvb2iq"
 title: "Fixing ImportError: No module named X in Python"
 type: q-and-a
 tags:
@@ -55,14 +61,25 @@ created: 2025-01-15
 ---
 ```
 
+**ID Format:**
+- **Base36 encoding** (0-9, a-z)
+- **Length:** 8 characters (4 bytes encoded in base36)
+- **Examples:** `fvb2iq`, `k3mnwx`, `zz9pab`
+- **Advantages:**
+  - Naturally lowercase (no case-sensitivity issues)
+  - 36 characters per position
+  - Direct 2-character prefix for sharding (1,296 directories)
+  - Simpler implementation (no base64url encoding needed)
+  - Human-readable (alphanumeric only, no special chars)
+
 ### Optional Front Matter
 
 ```yaml
-updated: 2025-02-09        # Last significant update
-status: reviewed            # draft | reviewed | outdated
-difficulty: beginner        # beginner | intermediate | advanced
-author: alice               # GitHub handle or name
-related: ["0045", "0089"]   # IDs of related entries
+updated: 2025-02-09           # Last significant update
+status: reviewed              # draft | reviewed | outdated
+difficulty: beginner          # beginner | intermediate | advanced
+author: alice                 # GitHub handle or name
+related: ["K3mNwx", "zZ9pAb"] # IDs of related entries
 source:
   url: https://example.com/original-post
   license: CC-BY-4.0
@@ -77,13 +94,19 @@ source:
 
 How do I fix `ImportError: No module named X` in Python?
 
-## Short Answer
+## Answers
+
+### Answer 1: Check Virtual Environment (Most Common)
 
 Check that you're using the correct virtual environment and that the package is installed.
 
-## Detailed Answer
-
 [Explanation with examples, code snippets, troubleshooting steps]
+
+### Answer 2: PYTHONPATH Configuration
+
+In some deployment scenarios, `PYTHONPATH` may need adjustment.
+
+[Alternative approach and examples]
 
 ## Common Pitfalls
 
@@ -93,8 +116,8 @@ Check that you're using the correct virtual environment and that the package is 
 
 ## See Also
 
-- Entry #0045: Virtual environment setup
-- Entry #0089: Understanding Python's import system
+- Entry #K3mNwx: Virtual environment setup
+- Entry #zZ9pAb: Understanding Python's import system
 ```
 
 **For `type: guide`:**
@@ -161,28 +184,70 @@ Dependency Injection
 
 ## Entry Types (v0.1.0)
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| **q-and-a** | Specific problem with solution | "How to fix ImportError in Python" |
-| **guide** | Step-by-step tutorial or how-to | "Getting started with async/await" |
-| **pattern** | Reusable solution pattern or anti-pattern | "Dependency injection in Python" |
-| **note** | Quick reference, definition, or concept | "Python GIL explained" |
+| Type        | Purpose                                   | Example                            |
+|-------------|-------------------------------------------|------------------------------------|
+| **q-and-a** | Specific problem with solution            | "How to fix ImportError in Python" |
+| **guide**   | Step-by-step tutorial or how-to           | "Getting started with async/await" |
+| **pattern** | Reusable solution pattern or anti-pattern | "Dependency injection in Python"   |
+| **note**    | Quick reference, definition, or concept   | "Python GIL explained"             |
 
 ---
 
 ## ID Convention
 
-**Format:** `{sequential-number}-{slug}`
+**Format:** Base36-encoded 4 random bytes (naturally lowercase)
 
-- **Sequential number:** `0001`, `0002`, etc. (zero-padded to 4 digits)
-- **Slug:** Lowercase, hyphenated, derived from title
+- **Base36 encoding:** 0-9 and a-z (36 characters, no special chars except underscore)
+- **Length:** 8 characters (4 bytes encoded in base36)
 - **Examples:**
-  - `0001-python-importerror-fix.md`
-  - `0042-kubernetes-pod-lifecycle.md`
+  - `fvb2iq.md` (stored in `entries/fv/`)
+  - `k3mnwx.md` (stored in `entries/k3/`)
+  - `zz9pab.md` (stored in `entries/zz/`)
+
+**Advantages over sequential IDs:**
+- ✅ No central counter needed
+- ✅ Decentralized: multiple people can create entries simultaneously without conflicts
+- ✅ Collision probability: ~1 in 68 billion (36^8 possible combinations)
+- ✅ Naturally lowercase: No case-sensitivity issues, works identically across all platforms
+- ✅ Sharding benefit: First 2 chars determine directory (1,296 possible prefixes: 36 × 36)
+- ✅ Smaller repos average ~5-10 entries per `aa/`, `ab/`, `fv/`, `k3/`, etc.
+- ✅ Human-readable: Only alphanumeric characters + underscore (no special URL encoding needed)
+
+**Directory Sharding Algorithm:**
+```python
+import secrets
+
+def generate_id() -> str:
+    """Generate a random base36 ID (8 characters)."""
+    random_int = int.from_bytes(secrets.token_bytes(4), 'big')
+    id_base36 = base36_encode(random_int)
+    # Zero-pad to 8 characters if needed
+    return id_base36.lower().zfill(8)
+
+def get_entry_path(entry_id: str) -> str:
+    """Get the file path for an entry."""
+    prefix = entry_id[:2]  # First 2 chars (already lowercase)
+    return f"entries/{prefix}/{entry_id}.md"
+
+# Examples
+id1 = "fvb2iq"
+path1 = get_entry_path(id1)  # "entries/fv/fvb2iq.md"
+
+id2 = "k3mnwx"
+path2 = get_entry_path(id2)  # "entries/k3/k3mnwx.md"
+```
+
+**Why Base36 Instead of Base64url?**
+- **No case issues:** Base36 is naturally lowercase (0-9, a-z)
+- **No special chars:** Only alphanumeric (URL-safe and filesystem-safe)
+- **Simpler:** No padding, no character encoding/decoding complexity
+- **Cross-platform:** Identical behavior on Linux, macOS, Windows
+- **Human-readable:** Easier to read and type than base64url
 
 **Assignment:**
-- In v0.1.0, manually assigned (check highest existing ID + 1)
-- The CLI tool will auto-assign in future versions
+- Auto-generated by CLI tool `k new` command
+- Users simply enter title, type, tags — ID created automatically
+- No manual assignment needed
 
 ---
 
@@ -228,15 +293,16 @@ k init "My Knowledge Base"
 
 # Create new entry (interactive)
 k new q-and-a "How to fix ImportError"
-# Creates entries/NNNN-how-to-fix-importerror.md with template
+# Creates entries/XX/XXXXXX.md with template and auto-generated ID
 
 # Search entries
 k search "asyncio"                    # Full-text search
 k search --tag python --tag async     # Filter by tags
 k search --type guide                 # Filter by type
 
-# Get specific entry
-k get 0001                            # Open in $EDITOR or print to stdout
+# Get specific entry by ID
+k get fvb2iq                          # Open in $EDITOR or print to stdout
+k cat fvb2iq                          # Print to stdout
 
 # Validate repo
 k validate                            # Check schema, duplicates, broken references
@@ -257,8 +323,8 @@ k index                               # Generates .knowledge/index.json
   "generated": "2025-02-09T10:30:00Z",
   "entries": [
     {
-      "id": "0001",
-      "path": "entries/0001-python-importerror-fix.md",
+      "id": "fvb2iq",
+      "path": "entries/fv/fvb2iq.md",
       "title": "Fixing ImportError: No module named X in Python",
       "type": "q-and-a",
       "tags": ["python", "import", "troubleshooting"],
@@ -269,12 +335,12 @@ k index                               # Generates .knowledge/index.json
     }
   ],
   "tags": {
-    "python": ["0001", "0002", "0015"],
-    "async": ["0002", "0008"]
+    "python": ["fvb2iq", "k3mnwx", "zz9pab"],
+    "async": ["k3mnwx", "ab1cde"]
   },
   "types": {
-    "q-and-a": ["0001", "0003"],
-    "guide": ["0002", "0004"]
+    "q-and-a": ["fvb2iq", "abc123"],
+    "guide": ["k3mnwx", "xyz456"]
   }
 }
 ```
@@ -289,16 +355,16 @@ k index                               # Generates .knowledge/index.json
 # 1. Create branch
 git checkout -b add-asyncio-guide
 
-# 2. Create entry
+# 2. Create entry (auto-generates ID and creates file)
 k new guide "Introduction to Python asyncio"
-# Edit entries/0042-introduction-to-python-asyncio.md
+# Creates entries/xx/xxxxxxxx.md with template, prints the generated ID
 
 # 3. Validate
 k validate
 
 # 4. Commit
-git add entries/0042-introduction-to-python-asyncio.md
-git commit -m "Add guide: Introduction to Python asyncio"
+git add entries/xx/xxxxxxxx.md
+git commit -m "Add guide: Introduction to Python asyncio (xxxxxxxx)"
 
 # 5. Push and create PR
 git push origin add-asyncio-guide
@@ -308,12 +374,13 @@ git push origin add-asyncio-guide
 ### Updating an Entry
 
 ```bash
-# 1. Edit the file
-vim entries/0001-python-importerror-fix.md
+# 1. Edit the file (look it up by ID or search)
+k get fvb2iq              # Find the file location
+vim entries/fv/fvb2iq.md
 # Update 'updated:' field in front matter
 
 # 2. Commit with descriptive message
-git commit -am "Update entry #0001: Add Python 3.13 compatibility notes"
+git commit -am "Update entry fvb2iq: Add Python 3.13 compatibility notes"
 ```
 
 ---
@@ -326,6 +393,8 @@ The `k validate` command checks:
    - All required fields present (`id`, `title`, `type`, `tags`, `created`)
    - Valid `type` value
    - Valid date formats (YYYY-MM-DD)
+   - For `q-and-a` entries: at least one `## Answer` section (with optional numbered answers)
+   - Valid ID format (base36: 0-9, a-z only, with underscores)
 
 2. **Uniqueness:**
    - No duplicate IDs
@@ -333,16 +402,23 @@ The `k validate` command checks:
 
 3. **References:**
    - All `related` IDs exist
-   - All internal links (`#0001`) resolve
+   - All internal links (by ID) resolve
 
-4. **File naming:**
-   - Filename matches pattern `{id}-{slug}.md`
-   - ID in filename matches front matter `id`
+4. **File naming and location:**
+   - Filename matches pattern `{id}.md`
+   - Directory matches first 2 characters of ID (e.g., `fvb2iq.md` in `fv/`, `k3mnwx.md` in `k3/`)
+   - ID in filename matches front matter `id` (exact case match, base36 lowercase)
 
-5. **Optional warnings:**
+5. **Directory structure:**
+   - Entry directories follow 2-character base36 pattern (lowercase)
+   - Valid directories: `aa/` through `zz/` and `0a/` through `0z/`, `00/` through `09/`, etc.
+   - No files in `entries/` root (all must be in subdirs)
+
+6. **Optional warnings:**
    - Entries with no `updated` field that are >6 months old
    - Entries marked `status: draft` that are >30 days old
    - Unused tags (defined in config but not used anywhere)
+   - Single-answer `q-and-a` entries (suggest adding alternatives)
 
 ---
 
@@ -355,13 +431,13 @@ The `k validate` command checks:
 def answer_question(user_query):
     # 1. Search knowledge base
     results = k_search(user_query, limit=5)
-    
+
     # 2. Build context
     context = "\n\n---\n\n".join([
         f"# Entry #{r.id}: {r.title}\n{r.body}"
         for r in results
     ])
-    
+
     # 3. Prompt LLM
     prompt = f"""Answer the user's question using these knowledge base entries:
 
@@ -370,7 +446,7 @@ def answer_question(user_query):
 User question: {user_query}
 
 Provide a clear answer and cite entry IDs when relevant."""
-    
+
     return llm.complete(prompt)
 ```
 
@@ -392,12 +468,17 @@ embeddings:
 
 ```text
 my-knowledge/
+├── README.md                # Quick start and overview
+├── CONTRIBUTING.md          # How to contribute
 ├── entries/
-│   ├── 0001-til-python-walrus-operator.md
-│   ├── 0002-debugging-docker-network-issue.md
-│   └── 0003-favorite-vim-plugins.md
-└── meta/
-    └── README.md  # "My personal TIL and troubleshooting notes"
+│   ├── fv/
+│   │   ├── fvb2iq.md       # TIL: Python walrus operator
+│   │   └── fvm7pl.md       # Debugging Docker network issues
+│   ├── pq/
+│   │   └── pqx8yz.md       # Favorite vim plugins
+│   └── ...
+└── .knowledge/
+    └── config.yaml          # Personal repo config
 ```
 
 **Characteristics:**
@@ -409,12 +490,17 @@ my-knowledge/
 
 ```text
 acme-engineering-kb/
+├── README.md                # Team KB overview
+├── CONTRIBUTING.md          # Review process, guidelines
 ├── entries/
-│   ├── 0001-deploying-to-staging.md
-│   ├── 0002-api-authentication-flow.md
-│   └── 0003-oncall-runbook-database.md
+│   ├── da/
+│   │   ├── dae1fg.md       # Deploying to staging
+│   │   └── dah2ij.md       # API authentication flow
+│   ├── on/
+│   │   └── onc3kl.md       # Oncall runbook: database
+│   └── ...
 └── .knowledge/
-    └── config.yaml  # license: proprietary, maintainers: [sre-team]
+    └── config.yaml          # Company repo config (proprietary license)
 ```
 
 **Characteristics:**
@@ -426,13 +512,17 @@ acme-engineering-kb/
 
 ```text
 awesome-python-kb/
+├── README.md                # Project overview & quick start
+├── CONTRIBUTING.md          # How to contribute
 ├── entries/
-│   ├── 0001-python-importerror-fix.md
-│   ├── 0002-asyncio-task-groups.md
+│   ├── py/
+│   │   ├── pye1fg.md       # Python ImportError fix
+│   │   └── pya2sy.md       # Asyncio task groups
+│   ├── ts/
+│   │   └── tst3kz.md       # Testing patterns
 │   └── ...
-└── meta/
-    ├── README.md
-    └── CONTRIBUTING.md
+└── .knowledge/
+    └── config.yaml          # Public KB config (CC-BY-4.0)
 ```
 
 **Characteristics:**
@@ -445,11 +535,11 @@ awesome-python-kb/
 
 ## Example Entry (Complete)
 
-**`entries/0001-python-importerror-fix.md`:**
+**`entries/fv/fvb2iq.md`:**
 
 ```markdown
 ---
-id: "0001"
+id: "fvb2iq"
 title: "Fixing ImportError: No module named X in Python"
 type: q-and-a
 tags:
@@ -462,14 +552,16 @@ updated: 2025-02-09
 status: reviewed
 difficulty: beginner
 author: alice
-related: ["0045", "0089"]
+related: ["k3mnwx", "zz9pab"]
 ---
 
 ## Question
 
 How do I fix `ImportError: No module named X` in Python?
 
-## Short Answer
+## Answers
+
+### Answer 1: Wrong Virtual Environment (Most Common)
 
 **Check that you're using the correct virtual environment** and that the package is installed in that environment. Verify with:
 
@@ -477,14 +569,6 @@ How do I fix `ImportError: No module named X` in Python?
 which python          # Shows which Python interpreter is active
 python -m pip list    # Shows installed packages
 ```
-
-## Detailed Answer
-
-`ImportError` occurs when Python cannot find a module you're trying to import. The most common causes are:
-
-### 1. Wrong Virtual Environment
-
-You may have installed the package in one environment but are running Python from another.
 
 **Solution:**
 
@@ -501,7 +585,7 @@ which python
 python -m pip install package-name
 ```
 
-### 2. Package Not Installed
+### Answer 2: Package Not Installed
 
 The package simply isn't installed in your current environment.
 
@@ -511,7 +595,7 @@ The package simply isn't installed in your current environment.
 python -m pip install package-name
 ```
 
-### 3. Name Shadowing
+### Answer 3: Name Shadowing
 
 You have a local file with the same name as the module you're trying to import (e.g., `requests.py` in your project directory).
 
@@ -519,7 +603,7 @@ You have a local file with the same name as the module you're trying to import (
 
 Rename your local file to something else.
 
-### 4. PYTHONPATH Issues
+### Answer 4: PYTHONPATH Issues
 
 In rare cases, your `PYTHONPATH` environment variable may be misconfigured.
 
@@ -541,9 +625,9 @@ python -c "import sys; print('\n'.join(sys.path))"
 
 ## See Also
 
-- Entry #0045: Setting up Python virtual environments
-- Entry #0089: Understanding Python's import system
-- Entry #0102: Using `uv` as a faster pip alternative
+- Entry k3mnwx: Setting up Python virtual environments
+- Entry zz9pab: Understanding Python's import system
+- Entry pq8rst: Using `uv` as a faster pip alternative
 ```
 
 ---
@@ -557,7 +641,7 @@ These features are intentionally deferred to keep the initial version simple:
 - ❌ Voting/reputation system
 - ❌ Multi-repo aggregation
 - ❌ Auto-summarization with LLMs
-- ❌ Rich media (images, videos) — Markdown images are fine, but no asset management
+- ❌ Rich media (images, videos) - Markdown images are fine, but no asset management
 - ❌ Comments or discussions (use GitHub issues/PRs)
 - ❌ Translations or i18n
 
@@ -628,13 +712,13 @@ A successful v0.1.0 means:
 
 ## Next Steps
 
-1. **Review this spec** — does it capture the essence while staying simple?
-2. **Choose CLI implementation** — Python or Rust?
-3. **Create seed repo** — pick a domain you know well (Python, Rust, Docker, etc.)
-4. **Build MVP CLI** — focus on `new`, `validate`, `search` first
-5. **Write 10 entries** — test the templates and workflow in practice
-6. **Iterate based on usage** — adjust schema/templates as needed
-7. **Publish v0.1.0** — repo + CLI + blog post
+1. **Review this spec** - does it capture the essence while staying simple?
+2. **Choose CLI implementation** - Python or Rust?
+3. **Create seed repo** - pick a domain you know well (Python, Rust, Docker, etc.)
+4. **Build MVP CLI** - focus on `new`, `validate`, `search` first
+5. **Write 10 entries** - test the templates and workflow in practice
+6. **Iterate based on usage** - adjust schema/templates as needed
+7. **Publish v0.1.0** - repo + CLI + blog post
 
 ---
 
@@ -650,16 +734,18 @@ cd my-knowledge
 # 2. Initialize
 k init "My Knowledge Base"
 
-# 3. Create your first entry
+# 3. Create your first entry (auto-generates random base36 ID)
 k new q-and-a "How to set up SSH keys"
+# Output: Created entry with ID: fxq2rl
+# File: entries/fx/fxq2rl.md
 
 # 4. Edit the generated file
-# entries/0001-how-to-set-up-ssh-keys.md
+vim entries/fx/fxq2rl.md
 
 # 5. Validate and commit
 k validate
 git add .
-git commit -m "Initial entry: SSH key setup"
+git commit -m "Initial entry: SSH key setup (fxq2rl)"
 ```
 
 ### Quick Start: Search and Use
@@ -671,8 +757,8 @@ k search "docker networking"
 # Filter by tags
 k search --tag docker --tag troubleshooting
 
-# Get a specific entry
-k get 0042
+# Get a specific entry by ID
+k get fvb2iq              # Finds and opens entries/fv/fvb2iq.md
 
 # Rebuild index after adding entries manually
 k index
@@ -694,7 +780,7 @@ k index
 ## License Recommendations
 
 For the **specification itself:**
-- **CC0 (Public Domain)** — anyone can implement it
+- **CC0 (Public Domain)** - anyone can implement it
 
 For **knowledge repos:**
 - **Personal/private:** Any license or none
@@ -733,7 +819,6 @@ For the **CLI tool:**
 - ❌ Duplicate content (unless significantly different perspective)
 - ❌ Outdated information marked as current
 - ❌ Promotional content or spam
-- ❌ Plagiarized content without attribution
 
 ---
 
@@ -761,34 +846,15 @@ For the **CLI tool:**
 ### 1. `python-knowledge`
 **Focus:** Python programming Q&A and patterns
 
-**Sample entries:**
-- `0001-python-importerror-fix.md`
-- `0002-asyncio-task-groups.md`
-- `0003-type-hints-best-practices.md`
-- `0004-pytest-fixtures-guide.md`
-- `0005-virtual-environment-setup.md`
-
 **Tags:** `python`, `async`, `testing`, `types`, `packaging`, `virtualenv`
 
 ### 2. `devops-runbooks`
 **Focus:** Infrastructure troubleshooting and operations
 
-**Sample entries:**
-- `0001-kubernetes-pod-crashloop.md`
-- `0002-docker-network-debugging.md`
-- `0003-ssl-certificate-renewal.md`
-- `0004-database-backup-restore.md`
-
 **Tags:** `kubernetes`, `docker`, `ssl`, `database`, `troubleshooting`, `oncall`
 
 ### 3. `web-dev-patterns`
 **Focus:** Web development patterns and anti-patterns
-
-**Sample entries:**
-- `0001-rest-api-versioning.md`
-- `0002-jwt-vs-session-auth.md`
-- `0003-cors-explained.md`
-- `0004-rate-limiting-strategies.md`
 
 **Tags:** `api`, `authentication`, `security`, `performance`, `architecture`
 
@@ -841,25 +907,6 @@ imports:
   - url: https://github.com/org/rust-kb
     prefix: "rust-"
 ```
-
----
-
-## Metrics for Success (6 Months Post-Launch)
-
-**Adoption:**
-- 🎯 **100+ stars** on reference implementation repo
-- 🎯 **10+ community repos** following the spec
-- 🎯 **50+ contributors** across all repos
-
-**Usage:**
-- 🎯 **5,000+ entries** across public repos
-- 🎯 **10+ organizations** using it internally
-- 🎯 **3+ tool integrations** (VSCode, Raycast, etc.)
-
-**Quality:**
-- 🎯 **90%+ entries** pass validation
-- 🎯 **Average entry age** <6 months (shows active maintenance)
-- 🎯 **50%+ entries** have `status: reviewed`
 
 ---
 
@@ -920,10 +967,10 @@ knowledge/
 ```
 
 **Dependencies:**
-- `click` — CLI framework
-- `pyyaml` — YAML parsing
-- `python-frontmatter` — Markdown front matter
-- `rich` — Beautiful terminal output
+- `click` - CLI framework
+- `pyyaml` - YAML parsing
+- `python-frontmatter` - Markdown front matter
+- `rich` - Beautiful terminal output
 
 **Installation:**
 ```bash
@@ -937,10 +984,10 @@ pipx install knowledge-cli  # Isolated install
 ## Closing Thoughts
 
 **This v0.1.0 spec prioritizes:**
-1. ✅ **Clarity** — Anyone can implement a compliant repo
-2. ✅ **Simplicity** — Minimal required fields and structure
-3. ✅ **Practicality** — Solves real problems (findability, collaboration, LLM integration)
-4. ✅ **Extensibility** — Clear path to v0.2.0, v1.0.0 without breaking changes
+1. ✅ **Clarity** - Anyone can implement a compliant repo
+2. ✅ **Simplicity** - Minimal required fields and structure
+3. ✅ **Practicality** - Solves real problems (findability, collaboration, LLM integration)
+4. ✅ **Extensibility** - Clear path to v0.2.0, v1.0.0 without breaking changes
 
 **The core insight remains:**
 > Git + Markdown + structured metadata = a powerful, distributed, LLM-ready knowledge system
